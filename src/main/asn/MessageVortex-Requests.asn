@@ -1,0 +1,56 @@
+MessageVortex-Requests DEFINITIONS EXPLICIT TAGS ::=
+BEGIN
+  EXPORTS HeaderRequest;
+  IMPORTS RequirementBlock
+                FROM MessageVortex-Requirements
+          UsagePeriod, NodeSpec
+                FROM MessageVortex-Helpers;
+
+  HeaderRequest ::= CHOICE {
+    identity      [0] HeaderRequestIdentity,
+    capabilities  [1] HeaderRequestCapability,
+    messageQuota  [2] HeaderRequestIncreaseMessageQuota,
+    transferQuota [3] HeaderRequestIncreaseTransferQuota,
+    quotaQuery    [4] HeaderRequestQuota,
+    nodeQuery     [5] HeaderRequestNodes,
+    replace       [6] HeaderRequestReplaceIdentity
+  }
+
+  HeaderRequestIdentity ::= SEQUENCE {
+    period UsagePeriod
+  }
+
+  HeaderRequestReplaceIdentity ::= SEQUENCE {
+    replace           SEQUENCE {
+        old            NodeSpec,
+        new            NodeSpec OPTIONAL
+    },
+    identitySignature OCTET STRING
+  }
+
+  HeaderRequestQuota ::= SEQUENCE {
+  }
+
+  HeaderRequestNodes ::= SEQUENCE {
+    numberOfNodes   INTEGER (0..255)
+  }
+
+  HeaderRequestIncreaseMessageQuota ::= SEQUENCE {
+    messages INTEGER (0..4294967295)
+  }
+
+  HeaderRequestIncreaseTransferQuota ::= SEQUENCE {
+    size     INTEGER (0..4294967295)
+  }
+
+  HeaderRequestCapability ::= SEQUENCE {
+    period UsagePeriod
+  }
+
+  HeaderRequestUpgrade ::= SEQUENCE {
+    version     OCTET STRING,
+    identifier  OCTET STRING
+  }
+
+
+END

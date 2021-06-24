@@ -1,0 +1,111 @@
+MessageVortex-Replies DEFINITIONS EXPLICIT TAGS ::=
+BEGIN
+  EXPORTS SpecialBlock;
+  IMPORTS BlendingSpec, NodeSpec
+                FROM MessageVortex-Helpers
+          RequirementBlock
+                FROM MessageVortex-Requirements
+          CipherSpec, PRNGType, MacAlgorithm
+                FROM MessageVortex-Ciphers
+          maxGFSize 
+                FROM MessageVortex-Operations		  
+          maxNumberOfReplays
+                FROM MessageVortex-Schema;
+
+  SpecialBlock ::= CHOICE {
+    capabilities  [1]  ReplyCapability,
+    requirement   [2]  SEQUENCE (SIZE (1..127))
+                       OF RequirementBlock,
+    quota         [4]  ReplyCurrentQuota,
+    nodes         [5]  ReplyNodes,
+    status        [99] StatusBlock
+  }
+
+  StatusBlock ::= SEQUENCE {
+    code            StatusCode
+  }
+
+  StatusCode ::= ENUMERATED {
+
+    -- System messages
+    ok                          (2000),
+    quotaStatus                 (2101),
+    puzzleRequired              (2201),
+
+    -- protocol usage failures
+    transferQuotaExceeded       (3001),
+    messageQuotaExceeded        (3002),
+    requestedQuotaOutOfBand     (3003),
+    identityUnknown             (3101),
+    messageChunkMissing         (3201),
+    messageLifeExpired          (3202),
+    puzzleUnknown               (3301),
+
+    -- capability errors
+    macAlgorithmUnknown         (3801),
+    symmetricAlgorithmUnknown   (3802),
+    asymmetricAlgorithmUnknown  (3803),
+    prngAlgorithmUnknown        (3804),
+    missingParameters           (3820),
+    badParameters               (3821),
+
+    -- Mayor host specific errors
+    hostError                   (5001)
+  }
+
+  ReplyNodes ::= SEQUENCE {
+    node   SEQUENCE (SIZE (1..5))
+           OF NodeSpec
+  }
+
+  ReplyCapability ::= SEQUENCE {
+    -- supported ciphers
+    cipher            SEQUENCE (SIZE (2..256)) 
+	                  OF CipherSpec,
+    -- supported mac algorithms
+    mac               SEQUENCE (SIZE (2..256)) 
+	                  OF MacAlgorithm,
+    -- supported PRNGs
+    prng              SEQUENCE (SIZE (2..256)) 
+	                  OF PRNGType,
+    -- maximum number of bytes to be transferred 
+	-- (outgoing bytes in vortex message without blending)
+    maxTransferQuota  INTEGER (0..4294967295),
+    -- maximum number of messages to process for this identity
+    maxMessageQuota   INTEGER (0..4294967295),
+    -- maximum simultaneously tracked header serials
+    maxHeaderSerials  INTEGER (0..4294967295),
+    -- maximum simultaneously valid build operations in workspace
+    maxBuildOps       INTEGER (0..4294967295),
+    -- maximum payload size
+    maxPayloadSize    INTEGER (0..4294967295),
+    -- maximum active payloads (without intermediate products)
+    maxActivePayloads INTEGER (0..4294967295),
+    -- maximum header lifespan in seconds
+    maxHeaderLive     INTEGER (0..4294967295), 
+    -- maximum number of replays accepted,
+    maxReplay         INTEGER (0..maxNumberOfReplays), 
+    -- Supported inbound blending
+    supportedBlendingIn SEQUENCE OF BlendingSpec,
+    -- Supported outbound blending
+    supportedBlendingOut SEQUENCE OF BlendingSpec,
+    -- supported galoise fields
+    supportedGFSize   SEQUENCE OF INTEGER (1..maxGF)
+  }
+
+  ReplyCurrentQuota ::= SEQUENCE {
+    messages INTEGER (0..4294967295),
+    size     INTEGER (0..4294967295)
+  }
+
+  ReplyUpgrade ::= SEQUENCE {
+    -- The offered version
+    version    [0] OCTET STRING,
+    -- The offered identitfier
+    identifier [1] OCTET STRING,
+    -- The archive or blob containing the software
+    blob       [2] OCTET STRING OPTIONAL
+  }
+
+END
+
