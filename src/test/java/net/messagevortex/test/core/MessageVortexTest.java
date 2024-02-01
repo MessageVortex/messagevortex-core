@@ -75,7 +75,7 @@ public class MessageVortexTest {
     try {
       DummyTransportTrx.clearDummyEndpoints();
       DummyTransportTrx.setLocalMode(true);
-      Assertions.assertEquals(0, MessageVortex.mainReturn(new String[] {"--timeoutAndDie=0"}), "Errorcode is not 0");
+      Assertions.assertEquals(102, MessageVortex.mainReturn(new String[] {"--timeoutAndDie=0"}), "Errorcode is not 102");
     } catch (Exception e) {
       e.printStackTrace();
       Assertions.fail("got unexpected exception " + e + "\n" + e.getStackTrace()[0].toString() );
@@ -103,8 +103,9 @@ public class MessageVortexTest {
       int ret = MessageVortex.mainReturn(new String[] {"--timeoutAndDie=3"});
       long duration = System.currentTimeMillis()-start;
       Assertions.assertAll("checking final result",
-              ()->Assertions.assertEquals(ret, 0,"Errorcode is not 0"),
-              ()->Assertions.assertTrue(duration >=3000, "Duration was below 3s (duration:"+duration+")")
+          ()->Assertions.assertEquals(102,ret,"Errorcode is not 102"),
+          ()->Assertions.assertTrue(duration >=3000, "Duration was below 3s (duration:"+duration+")"),
+          ()->Assertions.assertTrue(duration <=60000, "Duration was above 60s (duration:"+duration+")")
 
       );
     } catch (Exception e) {

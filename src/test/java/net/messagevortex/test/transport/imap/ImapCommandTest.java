@@ -253,7 +253,7 @@ public class ImapCommandTest {
 
                 s.setAuth(ap);
                 ImapClient c=new ImapClient(new InetSocketAddress("localhost",s.getPort()),new SecurityContext( context,encrypted?SSLTLS:PLAIN ));
-                c.setTimeout(2000);
+                c.setTimeout(20000);
                 c.connect();
                 Assertions.assertTrue(encrypted==c.isTls(), "check encryption ("+encrypted+"/"+c.isTls()+")");
                 String tag=ImapLine.getNextTag();

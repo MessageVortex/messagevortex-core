@@ -22,6 +22,7 @@ package net.messagevortex.router.operation;
 // * SOFTWARE.
 // ************************************************************************************
 
+import java.io.IOException;
 import net.messagevortex.MessageVortexLogger;
 
 import java.io.Serializable;
@@ -88,5 +89,22 @@ public class IdMapOperation extends AbstractOperation implements Serializable {
   @Override
   public String toString() {
     return inputId[0] + "->IdMapper(" + inputId.length + ")->" + outputId[0];
+  }
+
+  @Override
+  public int getTargetSize() throws IOException {
+    int ret=0;
+    for(int i=0;inputId.length>i;i++) {
+      ret+=payload.getPayload(inputId[i]).getPayload().length;
+    }
+    return ret;
+  }
+
+  @Override
+  public int getTargetSize(int[] sizeOfInputBlocks) throws IOException {
+    if(sizeOfInputBlocks.length==1) {
+      throw new IOException("array is not of size 1");
+    }
+    return sizeOfInputBlocks[0];
   }
 }

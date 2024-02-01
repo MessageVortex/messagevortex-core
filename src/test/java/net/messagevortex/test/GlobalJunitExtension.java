@@ -1,6 +1,7 @@
 package net.messagevortex.test;
 
 import net.messagevortex.MessageVortexLogger;
+import net.messagevortex.asn1.AsymmetricKeyCache;
 import net.messagevortex.asn1.AsymmetricKeyPreCalculator;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;

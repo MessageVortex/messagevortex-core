@@ -2,7 +2,7 @@ package net.messagevortex.commandline;
 
 import net.messagevortex.MessageVortex;
 import net.messagevortex.MessageVortexLogger;
-import net.messagevortex.router.operation.AddRedundancy;
+import net.messagevortex.router.operation.AddRedundancyOperation;
 import picocli.CommandLine;
 
 import java.io.File;
@@ -72,7 +72,7 @@ public class CommandLineHandlerRedundancyAdd implements Callable<Integer> {
 
     // apply redundancy operation
     LOGGER.log(Level.INFO, "adding redundancy");
-    byte[] out = AddRedundancy.execute(buffer, redundancyBlocks, numBlocks, gf);
+    byte[] out = AddRedundancyOperation.execute(buffer, redundancyBlocks, numBlocks, gf);
 
     // write output file
     LOGGER.log(Level.INFO, "writing output");

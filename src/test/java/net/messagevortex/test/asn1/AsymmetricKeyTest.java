@@ -80,7 +80,7 @@ public class AsymmetricKeyTest {
     try {
       b3 = (new AsymmetricKey(as.toBytes(DumpType.ALL_UNENCRYPTED))).decrypt(b2);
     } catch (IOException ioe) {
-      LOGGER.log(Level.WARNING, "unexpected exception", ioe);
+      LOGGER.log(Level.SEVERE, "unexpected exception", ioe);
       Assertions.fail("Constructor threw IOException");
     }
     Assertions.assertTrue(Arrays.equals(b1, b3), "error in encrypt/decrypt cycle with " + alg + " (same reserialized object)");

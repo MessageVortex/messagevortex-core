@@ -13,7 +13,7 @@
         <junit.version>5.7.1</junit.version>
         <jacoco.version>0.8.7</jacoco.version>
         <surefire.version>2.22.2</surefire.version>
-        <checkstyle.version>3.1.2</checkstyle.version>
+        <checkstyle.version>3.3.1</checkstyle.version>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -159,16 +159,17 @@
             <version>9.2.17.0</version>
         </dependency>
 
-        <dependency>
+        <!--<dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk15to18</artifactId>
-            <version>1.68</version>
-        </dependency>
+            <version>1.76</version>
+        </dependency>-->
 
+        <!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on -->
         <dependency>
             <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk15on</artifactId>
-            <version>1.68</version>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>1.76</version>
         </dependency>
 
         <dependency>
@@ -197,7 +198,7 @@
                         <dependency>
                             <groupId>com.puppycrawl.tools</groupId>
                             <artifactId>checkstyle</artifactId>
-                            <version>8.40</version>
+                            <version>10.12.4</version>
                         </dependency>
                     </dependencies>
                 </plugin>

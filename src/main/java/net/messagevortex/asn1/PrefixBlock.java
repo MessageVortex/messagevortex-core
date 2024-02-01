@@ -87,7 +87,7 @@ public class PrefixBlock extends AbstractBlock implements Serializable {
    *
    * @throws IOException if parsing fails
    */
-  public PrefixBlock(ASN1Primitive to, AsymmetricKey ak) throws IOException {
+  public PrefixBlock(ASN1Object to, AsymmetricKey ak) throws IOException {
     this(toDer(to), ak);
   }
 

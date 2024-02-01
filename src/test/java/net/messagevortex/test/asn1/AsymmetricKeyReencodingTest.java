@@ -141,7 +141,7 @@ public class AsymmetricKeyReencodingTest {
             }
             LOGGER.log(Level.INFO, "done with " + parameter.get(Parameter.ALGORITHM) + "/unspecified/" + parameter.get(Parameter.PADDING) + " (" + parameter.get(Parameter.KEYSIZE) + ")");
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Unexpected exception", e);
+            LOGGER.log(Level.SEVERE, "Unexpected exception", e);
             Assertions.fail("fuzzer encountered exception in asymmetric en/decryption test with algorithm " + parameter.get(Parameter.ALGORITHM) + "\n" + currentObject);
         } finally {
             System.err.flush();

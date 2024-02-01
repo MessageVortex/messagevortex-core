@@ -24,7 +24,6 @@ package net.messagevortex.router.operation;
 
 import net.messagevortex.MessageVortexLogger;
 import net.messagevortex.asn1.PayloadChunk;
-import net.messagevortex.asn1.RemoveRedundancyOperation;
 import net.messagevortex.asn1.VortexMessage;
 
 import java.io.IOException;
@@ -39,10 +38,9 @@ import java.util.logging.Level;
  *
  * <p>It rebuilds the data stream from the existing data blocks.</p>
  */
-public class RemoveRedundancy extends AbstractOperation implements Serializable {
+public class RemoveRedundancyOperation extends AbstractOperation implements Serializable {
 
   public static final long serialVersionUID = 100000000020L;
-
   private static final java.util.logging.Logger LOGGER;
 
   static {
@@ -50,9 +48,9 @@ public class RemoveRedundancy extends AbstractOperation implements Serializable 
     //MessageVortexLogger.setGlobalLogLevel(Level.ALL);
   }
 
-  RemoveRedundancyOperation operation;
+  net.messagevortex.asn1.RemoveRedundancyOperation operation;
 
-  public RemoveRedundancy(RemoveRedundancyOperation op) {
+  public RemoveRedundancyOperation(net.messagevortex.asn1.RemoveRedundancyOperation op) {
     this.operation = op;
   }
 
@@ -183,4 +181,44 @@ public class RemoveRedundancy extends AbstractOperation implements Serializable 
   }
 
 
+  @Override
+  public int getTargetSize() throws IOException {
+    int[] sizes=new int[operation.getRedundancy()+ operation.getDataStripes()];
+    for(int i=0;i<sizes.length;i++) {
+      sizes[i]=payload.getPayload(getInputId()[i]).getPayload().length;
+    }
+    return getTargetSize(sizes);
+  }
+
+  @Override
+  public int getTargetSize(int[] sizeOfInputBlocks) throws IOException {
+    int dataBlockSize=-1;
+    int numberOfDataBlocks=0;
+    if(sizeOfInputBlocks.length<operation.getDataStripes()) {
+      throw new IOException("Not enough input blocks");
+    }
+    if(sizeOfInputBlocks.length>operation.getDataStripes()+operation.getRedundancy()) {
+      throw new IOException("too many input blocks");
+    }
+    for(int i=0;i<sizeOfInputBlocks.length;i++) {
+      if(sizeOfInputBlocks[i]>0 && dataBlockSize==-1) {
+        dataBlockSize=sizeOfInputBlocks[i];
+        numberOfDataBlocks++;
+      } else if(sizeOfInputBlocks[i]>0 && dataBlockSize==sizeOfInputBlocks[i]) {
+        numberOfDataBlocks++;
+      } else if(sizeOfInputBlocks[i]>0) {
+        throw new IOException("Unexpected number of bytes in data block (expected:"+dataBlockSize+"; got:"+sizeOfInputBlocks[i]+")");
+      }
+    }
+    if(dataBlockSize<1) {
+      throw new IOException("No datablock bigger than 0");
+    }
+    if(numberOfDataBlocks<operation.getDataStripes()) {
+      throw new IOException("Not enough data blocks (minimum:"+operation.getDataStripes()+"; delivered:"+numberOfDataBlocks+")");
+    }
+    int inputSize=sizeOfInputBlocks[0];
+    // FIXME add padding prediction
+    int ret=inputSize/operation.getDataStripes()*(operation.getRedundancy()+operation.getDataStripes());
+    return ret;
+  }
 }

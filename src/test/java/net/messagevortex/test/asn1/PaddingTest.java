@@ -2,7 +2,8 @@ package net.messagevortex.test.asn1;
 
 import net.messagevortex.MessageVortexLogger;
 import net.messagevortex.asn1.encryption.Prng;
-import net.messagevortex.router.operation.AddRedundancy;
+import net.messagevortex.router.operation.AddRedundancyOperation;
+import net.messagevortex.router.operation.SimplePrng;
 import net.messagevortex.test.GlobalJunitExtension;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -42,9 +43,9 @@ public class PaddingTest {
 
     public void runTest() throws IOException {
       LOGGER.log(Level.INFO, "");
-      byte[] padded = AddRedundancy.pad(blockSize, numberOfOutBlocks, in, prng, c1, c2);
+      byte[] padded = AddRedundancyOperation.pad(blockSize, numberOfOutBlocks, in, prng, c1, c2);
       prng.reset();
-      byte[] unpadded = AddRedundancy.unpad(blockSize, numberOfOutBlocks, padded, prng);
+      byte[] unpadded = AddRedundancyOperation.unpad(blockSize, numberOfOutBlocks, padded, prng);
       Assertions.assertTrue(in.length == unpadded.length, "padding test failed: unpadded array is not of same size");
       for (int a = 0; a < unpadded.length; a++) {
         Assertions.assertTrue(in[a] == unpadded[a], "Error comparing array at pos " + a);
@@ -56,7 +57,7 @@ public class PaddingTest {
   public void simplePrngTest() {
     byte[] b = new byte[100];
     for (int i = 0; i < 1000; i++) {
-      Prng p = new AddRedundancy.SimplePrng();
+      Prng p = new SimplePrng();
       for (int j = 0; j < b.length; j++) {
         b[j] = p.nextByte();
       }
@@ -72,22 +73,22 @@ public class PaddingTest {
   public void basicPaddingTest() {
     try {
       // pad just one byte with empty c1 and c2
-      TestCase tc = new TestCase(new byte[1], null, 256, 30, 0, 0, new AddRedundancy.SimplePrng());
+      TestCase tc = new TestCase(new byte[1], null, 256, 30, 0, 0, new SimplePrng());
       tc.runTest();
       // pad just zero bytes with empty c1 and c2
-      tc = new TestCase(new byte[0], null, 256, 30, 0, 0, new AddRedundancy.SimplePrng());
+      tc = new TestCase(new byte[0], null, 256, 30, 0, 0, new SimplePrng());
       tc.runTest();
       // pad just zero bytes with c1=1
-      tc = new TestCase(new byte[1], null, 256, 30, 1, 0, new AddRedundancy.SimplePrng());
+      tc = new TestCase(new byte[1], null, 256, 30, 1, 0, new SimplePrng());
       tc.runTest();
       // pad just zero bytes with c2=1
-      tc = new TestCase(new byte[1], null, 256, 30, 0, 1, new AddRedundancy.SimplePrng());
+      tc = new TestCase(new byte[1], null, 256, 30, 0, 1, new SimplePrng());
       tc.runTest();
       // stepping test
       for (int i = 0; i < 40; i++) {
         LOGGER.log(Level.INFO, "Starting basic padding test " + i);
         byte[] b = new byte[(i) * 1048];
-        tc = new TestCase(b, null, 256, 30, 1765498380, 20, new AddRedundancy.SimplePrng());
+        tc = new TestCase(b, null, 256, 30, 1765498380, 20, new SimplePrng());
         tc.runTest();
       }
     } catch (IOException ioe) {
@@ -108,7 +109,7 @@ public class PaddingTest {
         int c1 = sr.nextInt();
         int c2 = sr.nextInt(1024 * 1024);
         LOGGER.log(Level.INFO, "testing with size " + b.length + " and parameters c1=" + c1 + " and c2=" + c2);
-        TestCase tc = new TestCase(b, null, 256, 30, c1, c2, new AddRedundancy.SimplePrng());
+        TestCase tc = new TestCase(b, null, 256, 30, c1, c2, new SimplePrng());
         tc.runTest();
       } catch (IOException ioe) {
         ioe.printStackTrace();

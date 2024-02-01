@@ -1,6 +1,7 @@
 package net.messagevortex.asn1;
 
 
+import java.security.spec.AlgorithmParameterSpec;
 import net.messagevortex.ExtendedSecureRandom;
 import net.messagevortex.MessageVortexLogger;
 import net.messagevortex.asn1.encryption.Algorithm;
@@ -22,6 +23,7 @@ import org.bouncycastle.asn1.DERTaggedObject;
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.spec.ECParameterSpec;
+import org.bouncycastle.jce.spec.IESParameterSpec;
 import org.bouncycastle.pqc.jcajce.provider.BouncyCastlePQCProvider;
 
 import javax.crypto.BadPaddingException;
@@ -36,6 +38,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 import java.util.logging.Level;
+import org.bouncycastle.util.encoders.Hex;
 
 /**
  * <p>Asymmetric Key Handling.</p>
@@ -261,7 +264,7 @@ public class AsymmetricKey extends Key implements Serializable, Dumpable {
       throw new IOException("encountered wrong tag number when parsing public key (expected: "
               + PUBLIC_KEY_TAG + "; got:" + tagged.getTagNo() + ")");
     }
-    publicKey = ASN1OctetString.getInstance(tagged.getObject()).getOctets();
+    publicKey = ASN1OctetString.getInstance(tagged.getBaseObject()).getOctets();
     
     // parse private key
     if (s1.size() > i) {
@@ -270,7 +273,7 @@ public class AsymmetricKey extends Key implements Serializable, Dumpable {
         throw new IOException("encountered wrong tag number when parsing private key (expected: "
                 + PRIVATE_KEY_TAG + "; got:" + tagged.getTagNo() + ")");
       }
-      privateKey = ASN1OctetString.getInstance(tagged.getObject()).getOctets();
+      privateKey = ASN1OctetString.getInstance(tagged.getBaseObject()).getOctets();
     }
     
   }
@@ -376,7 +379,7 @@ public class AsymmetricKey extends Key implements Serializable, Dumpable {
       v.add(new DERTaggedObject(true, PRIVATE_KEY_TAG, new DEROctetString(privateKey)));
     }
   }
-  
+
   /***
    * <p>Encrypts a byte array using the key contained in this object.</p>
    *
@@ -385,22 +388,38 @@ public class AsymmetricKey extends Key implements Serializable, Dumpable {
    */
   @Override
   public byte[] encrypt(byte[] b) throws IOException {
+    return encrypt(b,true);
+  }
+
+    /***
+     * <p>Encrypts a byte array using the key contained in this object.</p>
+     *
+     * @param b the plain text byte array to encrypt
+     * @param publicKeyEncrypt whether to use the public key for encryption or not
+     * @return the encrypted byte array including padding
+     */
+    public byte[] encrypt(byte[] b,boolean publicKeyEncrypt) throws IOException {
     try {
       KeyPair key = getKeyPair();
       Cipher cipher = getCipher();
-      java.security.Key k = key.getPublic();
-      cipher.init(Cipher.ENCRYPT_MODE, k);
+      java.security.Key k = publicKeyEncrypt?key.getPublic():key.getPrivate();
+      // FIXME: (HIGH) review parameters of ISEParameterSpec
+      if ("RSA".equals(parameters.get(Parameter.ALGORITHM))) {
+        cipher.init(Cipher.ENCRYPT_MODE, k);
+      } else {
+        cipher.init(Cipher.ENCRYPT_MODE, k, new IESParameterSpec(Hex.decode("202122232425262728292a2b2c2d2e2f"), Hex.decode("303132333435363738393a3b3c3d3e3f"), 128));
+      }
       return cipher.doFinal(b);
     } catch (InvalidKeySpecException e) {
       throw new IOException("Exception while getting key pair", e);
     } catch (NoSuchAlgorithmException | NoSuchPaddingException | NoSuchProviderException
             | IllegalBlockSizeException | BadPaddingException e) {
       throw new IOException("Exception while encrypting (len: " + b.length + ")", e);
-    } catch (InvalidKeyException e) {
+    } catch (InvalidKeyException|InvalidAlgorithmParameterException e) {
       throw new IOException("Exception while init of cipher ", e);
     }
   }
-  
+
   /***
    * <p>Decrypts a byte array using the key contained in this object.</p>
    *
@@ -409,15 +428,28 @@ public class AsymmetricKey extends Key implements Serializable, Dumpable {
    */
   @Override
   public byte[] decrypt(byte[] b) throws IOException {
-    try {
+    return decrypt(b,true);
+  }
+
+    /***
+     * <p>Decrypts a byte array using the key contained in this object.</p>
+     *
+     * @param b the encrypted byte array
+     * @param privateKeyDecrypt whether to use the public key for encryption or not
+     * @return the plain text byte array
+     */
+    public byte[] decrypt(byte[] b, boolean privateKeyDecrypt) throws IOException {
+        try {
       KeyPair key = getKeyPair();
       Cipher cipher = getCipher();
-      java.security.Key k = key.getPrivate();
-      cipher.init(Cipher.DECRYPT_MODE, k);
+      java.security.Key k = privateKeyDecrypt?key.getPrivate():key.getPublic();
+      if ("RSA".equals(parameters.get(Parameter.ALGORITHM))) {
+        cipher.init(Cipher.DECRYPT_MODE, k);
+      } else {
+        cipher.init(Cipher.DECRYPT_MODE, k, new IESParameterSpec(Hex.decode("202122232425262728292a2b2c2d2e2f"), Hex.decode("303132333435363738393a3b3c3d3e3f"), 128));
+      }
       return cipher.doFinal(b);
-    } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchPaddingException
-            | NoSuchProviderException | InvalidKeyException | IllegalBlockSizeException
-            | BadPaddingException e) {
+    } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchPaddingException | NoSuchProviderException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException e) {
       throw new IOException("Exception while decrypting (len: " + b.length + ")", e);
     }
     

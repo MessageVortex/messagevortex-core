@@ -2,7 +2,6 @@ package net.messagevortex.router.operation;
 
 import net.messagevortex.MessageVortexLogger;
 import net.messagevortex.asn1.AbstractRedundancyOperation;
-import net.messagevortex.asn1.AddRedundancyOperation;
 import net.messagevortex.asn1.PayloadChunk;
 import net.messagevortex.asn1.SymmetricKey;
 import net.messagevortex.asn1.VortexMessage;
@@ -11,7 +10,6 @@ import net.messagevortex.asn1.encryption.Prng;
 import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.util.Random;
 import java.util.Vector;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
@@ -21,61 +19,40 @@ import java.util.logging.Level;
  *
  * <p>It builds redundant data blocksfrom the existing data blocks.</p>
  */
-public class AddRedundancy extends AbstractOperation implements Serializable {
-
-  private static final long MAX_SIZE = 2L << 31; // calculate 2^32
-
-  /***
-   * <p>Wrapper for the java random number generator (not normative).</p>
-   */
-  public static class SimplePrng implements Prng {
-
-    private final Random sr = new Random();
-    private final long seed;
-
-    public SimplePrng() {
-      seed = sr.nextLong();
-      sr.setSeed(seed);
-    }
-
-    public SimplePrng(long seed) {
-      this.seed = seed;
-    }
-
-
-    /***
-     * <p>Get the next random byte of the Prng.</p>
-     *
-     * @return the next random byte
-     */
-    public synchronized byte nextByte() {
-      byte[] a = new byte[1];
-      sr.nextBytes(a);
-      return a[0];
-    }
-
-    /***
-     * <p>Resets the Prng to the initially seeded state.</p>
-     */
-    public void reset() {
-      sr.setSeed(seed);
-    }
-  }
-
-  private static final Prng localPrng = new SimplePrng();
+public class AddRedundancyOperation extends AbstractOperation implements Serializable {
 
   public static final long serialVersionUID = 100000000018L;
-
   private static final java.util.logging.Logger LOGGER;
+  private static final long MAX_SIZE = 2L << 31; // calculate 2^32
+  private static Prng localPrng=new SimplePrng();
 
   static {
     LOGGER = MessageVortexLogger.getLogger((new Throwable()).getStackTrace()[0].getClassName());
     //MessageVortexLogger.setGlobalLogLevel(Level.ALL);
   }
 
+  @Override
+  public int getTargetSize() throws IOException {
+    int inputSize=payload.getPayload(operation.getInputId()).getPayload().length;
+    // FIXME add padding prediction
+    int ret=inputSize/operation.getDataStripes()*(operation.getRedundancy()+operation.getDataStripes());
+    return ret;
+  }
+
+  @Override
+  public int getTargetSize(int[] sizeOfInputBlocks) throws IOException {
+    if(sizeOfInputBlocks.length!=1) {
+      throw new IOException("number of sizes is not 1");
+    }
+    int inputSize=sizeOfInputBlocks[0];
+    // FIXME add padding prediction
+    int ret=inputSize/operation.getDataStripes()*(operation.getRedundancy()+operation.getDataStripes());
+    return ret;
+  }
+
   AbstractRedundancyOperation operation;
 
-  public AddRedundancy(AddRedundancyOperation op) {
+  public AddRedundancyOperation(net.messagevortex.asn1.AddRedundancyOperation op) {
     this.operation = op;
   }
 
@@ -146,8 +123,8 @@ public class AddRedundancy extends AbstractOperation implements Serializable {
    * @return the data with added redundancy
    */
   public static byte[] execute(byte[] in, int redundancy, int dataStripes, int gf) {
-    AddRedundancy ar = new AddRedundancy(
-        new AddRedundancyOperation(-1, redundancy, dataStripes,
+    AddRedundancyOperation ar = new AddRedundancyOperation(
+        new net.messagevortex.asn1.AddRedundancyOperation(-1, redundancy, dataStripes,
             new Vector<SymmetricKey>(), -1, gf)
     );
 

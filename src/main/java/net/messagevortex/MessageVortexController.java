@@ -29,6 +29,8 @@ public class MessageVortexController {
     
     private boolean shutdown = false;
     private Thread runner = null;
+
+    private boolean timeoutHappened=false;
     
     public Thread getThread() {
       return runner;
@@ -96,14 +98,19 @@ public class MessageVortexController {
         }
       }
     }
-    
-    
+
+
     /***
      * <p>Shutdown Controller and wait for termination.</p>
      */
-    public void shutdown() {
+    public  void shutdown() {
+      shutdown(false);
+    }
+
+    private void shutdown(boolean timeout) {
       synchronized (runningLock) {
         shutdown = true;
+        timeoutHappened=timeout;
         
         //wake up thread
         try {
@@ -154,9 +161,13 @@ public class MessageVortexController {
     timer.schedule(new TimerTask() {
       @Override
       public void run() {
-        runner.shutdown();
+        runner.shutdown(true);
       }
     }, milliSeconds);
+  }
+
+  public boolean wasTimeout() {
+    return runner.timeoutHappened;
   }
   
 }

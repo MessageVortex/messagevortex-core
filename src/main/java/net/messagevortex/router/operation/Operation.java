@@ -23,11 +23,12 @@ package net.messagevortex.router.operation;
 // ************************************************************************************
 
 import net.messagevortex.asn1.IdentityBlock;
+import net.messagevortex.asn1.PrecalculateSize;
 
 /**
  * <p>This interface represents a standard operation in the payload space of an identity.</p>
  */
-public interface Operation {
+public interface Operation extends PrecalculateSize {
 
   IdentityBlock getIdentity();
 

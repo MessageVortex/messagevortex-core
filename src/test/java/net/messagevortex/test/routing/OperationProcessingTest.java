@@ -2,17 +2,15 @@ package net.messagevortex.test.routing;
 
 import net.messagevortex.ExtendedSecureRandom;
 import net.messagevortex.MessageVortexLogger;
-import net.messagevortex.asn1.AddRedundancyOperation;
 import net.messagevortex.asn1.IdentityBlock;
 import net.messagevortex.asn1.PayloadChunk;
-import net.messagevortex.asn1.RemoveRedundancyOperation;
 import net.messagevortex.asn1.SymmetricKey;
-import net.messagevortex.router.operation.AddRedundancy;
+import net.messagevortex.router.operation.AddRedundancyOperation;
 import net.messagevortex.router.operation.IdMapOperation;
 import net.messagevortex.router.operation.InternalPayloadSpace;
 import net.messagevortex.router.operation.InternalPayloadSpaceStore;
 import net.messagevortex.router.operation.Operation;
-import net.messagevortex.router.operation.RemoveRedundancy;
+import net.messagevortex.router.operation.RemoveRedundancyOperation;
 import net.messagevortex.test.GlobalJunitExtension;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -71,19 +69,19 @@ public class OperationProcessingTest {
 
     // do the test
     LOGGER.log(Level.INFO, "  fuzzing with dataStipes:" + dataStripes + "/redundancyStripes:" + redundancy + "/GF(" + gfSize + ")/dataSize:" + inBuffer.length + "");
-    Operation iop = new AddRedundancy(new AddRedundancyOperation(1, dataStripes, redundancy, Arrays.asList(keys), 1000, gfSize));
+    Operation iop = new AddRedundancyOperation(new net.messagevortex.asn1.AddRedundancyOperation(1, dataStripes, redundancy, Arrays.asList(keys), 1000, gfSize));
     Assertions.assertTrue(p.addOperation(iop), "add operation not added");
     Assertions.assertTrue(p.setPayload(new PayloadChunk(1, inBuffer, null)) == null, "payload not added");
 
     // straight operation
-    Operation oop = new RemoveRedundancy(new RemoveRedundancyOperation(1000, dataStripes, redundancy, Arrays.asList(keys), 2000, gfSize));
+    Operation oop = new RemoveRedundancyOperation(new net.messagevortex.asn1.RemoveRedundancyOperation(1000, dataStripes, redundancy, Arrays.asList(keys), 2000, gfSize));
     Assertions.assertTrue(p.addOperation(oop), "remove operation not added");
     byte[] b = p.getPayload(2000).getPayload();
     Assertions.assertTrue(b != null && Arrays.equals(inBuffer, b), "error testing straight redundancy calculation");
 
     // redundancy operation
     LOGGER.log(Level.INFO, "  Recovery Test");
-    Operation oop2 = new RemoveRedundancy(new RemoveRedundancyOperation(3000, dataStripes, redundancy, Arrays.asList(keys), 4000, gfSize));
+    Operation oop2 = new RemoveRedundancyOperation(new net.messagevortex.asn1.RemoveRedundancyOperation(3000, dataStripes, redundancy, Arrays.asList(keys), 4000, gfSize));
     Assertions.assertTrue(p.addOperation(oop2), "add operation for rebuild test not added");
     // set random passthrus
     Map<Integer, Operation> l = new HashMap<>();

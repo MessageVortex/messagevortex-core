@@ -301,7 +301,11 @@ public class MessageVortex implements Callable<Integer> {
     // remove all entries from identity store
     DummyTransportTrx.clearDummyEndpoints();
     LOGGER.log(Level.INFO, "******* shutdown complete *******");
-    return 0;
+    if(controller.wasTimeout()) {
+      return 102;
+    } else {
+      return 0;
+    }
   }
 
   /**

@@ -148,9 +148,11 @@ public class AsymmetricKeyPreCalculator implements Serializable, Callable<Intege
             LOGGER.log(Level.FINE, "precalculating key " + param + "");
             try {
                 long start = System.currentTimeMillis();
+                LOGGER.log(Level.INFO, "Precalculating "+param.toString()+" for cache");
                 AsymmetricKey ak = new AsymmetricKey(new AlgorithmParameter(param), false);
                 cache.setCalcTime(new AlgorithmParameter(param), System.currentTimeMillis() - start);
                 cache.push(ak);
+                LOGGER.log(Level.INFO, "Precalculation of "+param.toString()+" done and moved to cache");
             } catch (IOException ioe) {
                 LOGGER.log(Level.SEVERE, "got unexpected exception", ioe);
             }
@@ -305,8 +307,14 @@ public class AsymmetricKeyPreCalculator implements Serializable, Callable<Intege
      *                                     thread was tried to be started
      */
     public static String setCacheFileName(String name) {
-        if ("".equals(filename)) {
-            filename = DEFAULT_CACHE_FILENAME;
+        if ("".equals(name)) {
+            name = DEFAULT_CACHE_FILENAME;
+        }
+
+        try {
+            cache.store(filename);
+        } catch(IOException ioe) {
+            LOGGER.log(Level.WARNING,"Exception while saving key cache",ioe);
         }
 
         // if the same name is set again do nothing
@@ -732,6 +740,18 @@ public class AsymmetricKeyPreCalculator implements Serializable, Callable<Intege
 
         private Thread runCalculatorThread(final AlgorithmParameter param) {
             return new CalculationThread(param);
+        }
+    }
+
+    public static void main(String[] args) throws InterruptedException,IOException {
+        LOGGER.log(Level.INFO, "Running key cache precalculator");
+        cache.load(AsymmetricKeyPreCalculator.DEFAULT_CACHE_FILENAME);
+        cache.showStats();
+        while (true) {
+            Thread.sleep(30000);
+            LOGGER.log(Level.INFO, "still running");
+            cache.store(null);
+            cache.showStats();
         }
     }
 }

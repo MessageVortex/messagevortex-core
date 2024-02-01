@@ -69,20 +69,23 @@ public class RoutingCombo extends AbstractBlock implements Serializable {
   private BlendingSpec recipient;
   private long minProcessTime = 0;
   private long maxProcessTime = 0;
-  private PrefixBlock[] prefix;
-  private RoutingCombo[] nextHop;
+  private PrefixBlock[] mprefix;
+  private PrefixBlock[] cprefix;
+  private RoutingCombo[] nextHop;  //* routing[406] *//
   private long forwardSecret = -1;
+  // FIXME: (HIGH) MURB support missing in standard
   private RoutingCombo murbReplyBlock = null;
   private long murbMaxReplay = -1;
   private UsagePeriod murbValidity = null;
-  private final List<Operation> operation = new ArrayList<>();
+  private final List<Operation> operation = new ArrayList<>(); //* assembly[407] *//
 
   /***
    * <p>Creates an empty router block.</p>
    */
   public RoutingCombo() {
     recipient = new BlendingSpec("");
-    prefix = new PrefixBlock[0];
+    mprefix = new PrefixBlock[0];
+    cprefix = new PrefixBlock[0];
     nextHop = new RoutingCombo[0];
   }
 
@@ -141,17 +144,17 @@ public class RoutingCombo extends AbstractBlock implements Serializable {
     switch (ae.getTagNo()) {
       case PREFIX_PLAIN:
         LOGGER.log(Level.INFO, "parsing plain prefix");
-        prefix = getPrefix(ae.getObject().toASN1Primitive());
+        mprefix = getPrefix(ae.getBaseObject().toASN1Primitive());
         break;
       case PREFIX_ENCRYPTED:
         LOGGER.log(Level.INFO, "parsing encrypted prefix");
-        prefix = getPrefix(ae.getObject().toASN1Primitive());
+        mprefix = getPrefix(ae.getBaseObject().toASN1Primitive());
         break;
       default:
         throw new IOException("Error parsing prefix (expected: " + PREFIX_PLAIN + " or "
                               + PREFIX_ENCRYPTED + ";got:" + ae.getTagNo() + ")");
     }
-    if (prefix == null) {
+    if (mprefix == null) {
       throw new NullPointerException("prefix should not parse to null (decoding)");
     }
 
@@ -161,12 +164,13 @@ public class RoutingCombo extends AbstractBlock implements Serializable {
       case ROUTING_PLAIN:
       case ROUTING_ENCRYPTED:
         // if it is encrypted we have no decryption key for it anyway
-        ASN1Sequence seq = ASN1Sequence.getInstance(ae.getObject());
+        ASN1Sequence seq = ASN1Sequence.getInstance(ae.getBaseObject());
         List<RoutingCombo> p2 = new ArrayList<>(seq.size());
         for (ASN1Encodable b : seq) {
           p2.add(new RoutingCombo(b));
         }
-        if (p2.size() != prefix.length) {
+        if (p2.size() != mprefix.length) {
+          // TODO: (LOW) fix length if PLAIN
           throw new IOException("missmatch in length of prefix and router block");
         } else {
           nextHop = p2.toArray(new RoutingCombo[p2.size()]);
@@ -183,7 +187,7 @@ public class RoutingCombo extends AbstractBlock implements Serializable {
     // parse reply block
     ae = ASN1TaggedObject.getInstance(s1.getObjectAt(i++));
     if (ae.getTagNo() == MURB) {
-      ASN1Sequence s2 = ASN1Sequence.getInstance(ae.getObject());
+      ASN1Sequence s2 = ASN1Sequence.getInstance(ae.getBaseObject());
       if (s2.size() != 3) {
         throw new IOException("invalid sequence size for reply block (got: " + s2.size()
                               + "; expected: 3)");
@@ -201,7 +205,7 @@ public class RoutingCombo extends AbstractBlock implements Serializable {
     // parse operations
     ae = ASN1TaggedObject.getInstance(s1.getObjectAt(i++));
     if (ae.getTagNo() == OPERATIONS) {
-      ASN1Sequence s2 = ASN1Sequence.getInstance(ae.getObject());
+      ASN1Sequence s2 = ASN1Sequence.getInstance(ae.getBaseObject());
       List<Operation> o = new ArrayList<>();
       if (s2.size() > 0) {
         for (ASN1Encodable obj : s2) {
@@ -258,7 +262,7 @@ public class RoutingCombo extends AbstractBlock implements Serializable {
 
   @Override
   public ASN1Object toAsn1Object(DumpType dumpType) throws IOException {
-    if (prefix == null) {
+    if (mprefix == null) {
       throw new NullPointerException("prefix may not be null when encoding");
     }
     ASN1EncodableVector v = new ASN1EncodableVector();
@@ -274,7 +278,7 @@ public class RoutingCombo extends AbstractBlock implements Serializable {
       case ALL_UNENCRYPTED:
       case INTERNAL:
         ASN1EncodableVector v2 = new ASN1EncodableVector();
-        for (PrefixBlock p : prefix) {
+        for (PrefixBlock p : mprefix) {
           v2.add(p.toAsn1Object(dumpType));
         }
         v.add(new DERTaggedObject(PREFIX_PLAIN, new DERSequence(v2)));
@@ -283,7 +287,7 @@ public class RoutingCombo extends AbstractBlock implements Serializable {
       case PUBLIC_ONLY:
       case ALL:
         ASN1EncodableVector v3 = new ASN1EncodableVector();
-        for (PrefixBlock p : prefix) {
+        for (PrefixBlock p : mprefix) {
           v3.add(new DEROctetString(p.toEncBytes()));
         }
         v.add(new DERTaggedObject(PREFIX_ENCRYPTED, new DERSequence(v3)));
@@ -345,10 +349,28 @@ public class RoutingCombo extends AbstractBlock implements Serializable {
   }
 
   @Override
-  public String dumpValueNotation(String prefix, DumpType dumpType) {
+  public String dumpValueNotation(String prefix, DumpType dumpType) throws IOException {
     StringBuilder sb = new StringBuilder();
     sb.append('{').append(CRLF);
-    sb.append(prefix).append("  ").append(CRLF);
+    sb.append(prefix).append("  minProcessTime ").append(minProcessTime).append(",").append(CRLF);
+    sb.append(prefix).append("  minProcessTime ").append(minProcessTime).append(",").append(CRLF);
+    // FIXME: PeerKey support missing (multiple)
+    // sb.append(prefix).append("  peerKey ").append(peerKey.dumpValueNotation(prefix+"  ",dumpType)).append(CRLF);
+    sb.append(prefix).append("  recipient ").append(recipient.dumpValueNotation(prefix+"  ",dumpType)).append(',').append(CRLF);
+    sb.append(prefix).append("  mPrefix {").append(CRLF);
+    if(cprefix!=null) {
+      for (PrefixBlock p : this.mprefix) {
+        sb.append(prefix).append("    ").append(p.dumpValueNotation(prefix + "    ", dumpType)).append(CRLF);
+      }
+    }
+    sb.append(prefix).append("  },").append(CRLF);
+    sb.append(prefix).append("  cPrefix {").append(CRLF);
+    if(cprefix!=null) {
+      for (PrefixBlock p : this.cprefix) {
+        sb.append(prefix).append("    ").append(p.dumpValueNotation(prefix + "    ", dumpType)).append(CRLF);
+      }
+    }
+    sb.append(prefix).append("  }").append(CRLF);
     sb.append(prefix).append('}');
     return sb.toString();
   }
@@ -372,7 +394,11 @@ public class RoutingCombo extends AbstractBlock implements Serializable {
 
   @Override
   public int hashCode() {
-    return prepareDump(dumpValueNotation("", DumpType.ALL_UNENCRYPTED)).hashCode();
+    try {
+      return prepareDump(dumpValueNotation("", DumpType.ALL_UNENCRYPTED)).hashCode();
+    } catch(IOException e) {
+      return e.hashCode();
+    }
   }
 
 }
