@@ -237,7 +237,7 @@ public class AsymmetricKeyCache implements Serializable {
       }
       elementCache.clear();
       for (int j = 0; j < i; j++) {
-        LOGGER.log(Level.INFO, "  Reading cache element "+j+" into cache");
+        LOGGER.log(Level.FINEST, "  Reading cache element "+j+" into cache");
         push((AsymmetricKey) in.readObject());
       }
     }
@@ -262,9 +262,15 @@ public class AsymmetricKeyCache implements Serializable {
    * @throws IOException if writing of file fails
    */
   public void store(String filename) throws IOException {
+    // set default filename
     if (filename == null || "".equals(filename)) {
       filename = AsymmetricKeyPreCalculator.DEFAULT_CACHE_FILENAME;
     }
+
+    // refuse to write an empty cache
+    if(cache.isEmpty()) return;
+
+    // write file
     Path p = Paths.get(filename);
     try (
         ObjectOutputStream os = new ObjectOutputStream(Files.newOutputStream(p))
@@ -272,6 +278,8 @@ public class AsymmetricKeyCache implements Serializable {
       os.writeObject(this);
     }
     LOGGER.log(Level.INFO, "stored cache to file \"" + filename + "\"");
+
+    // show stats
     showStats();
   }
 
@@ -473,13 +481,18 @@ public class AsymmetricKeyCache implements Serializable {
 
 
     // get element and return
+    AlgorithmParameter ap=null;
     for (Map.Entry<Long, AlgorithmParameter> me : hm.entrySet()) {
-      if (me.getKey() >= e) {
-        return me.getValue();
+      if(me==null) {
+        ap=me.getValue();
       }
+      if (me.getKey() >= e) {
+        return ap;
+      }
+      ap=me.getValue();
     }
 
-    return null;
+    return ap;
   }
 
 
@@ -545,6 +558,7 @@ public class AsymmetricKeyCache implements Serializable {
     synchronized (cache) {
       out.writeInt(cache.size());
       for (Map.Entry<AlgorithmParameter, CacheElement> me : cache.entrySet()) {
+        LOGGER.log(Level.INFO, "Writing "+me.getKey().toString()+" ("+me.getValue().size()+")");
         out.writeObject(me.getKey());
         out.writeObject(me.getValue());
       }
@@ -560,7 +574,9 @@ public class AsymmetricKeyCache implements Serializable {
       this.cache.clear();
       for (int j = 0; j < i; j++) {
         AlgorithmParameter key = (AlgorithmParameter) in.readObject();
+        LOGGER.log(Level.INFO, "Reading "+key.toString()+"");
         CacheElement value = (CacheElement) in.readObject();
+        LOGGER.log(Level.INFO, value.size()+" elements of "+key.toString()+" has been read");
         this.cache.put(key, value);
       }
     } catch (ClassNotFoundException cnfe) {
