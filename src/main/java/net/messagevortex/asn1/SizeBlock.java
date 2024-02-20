@@ -42,7 +42,7 @@ public class SizeBlock extends AbstractBlock implements Serializable {
 
   public static final long serialVersionUID = 100000000015L;
 
-  private enum SizeType {
+  public enum SizeType {
     PERCENT(15001),
     ABSOLUTE(15101);
 
@@ -66,7 +66,7 @@ public class SizeBlock extends AbstractBlock implements Serializable {
     }
   }
 
-  SizeType type;
+  SizeType sizeType;
   int from;
   int to;
 
@@ -74,12 +74,18 @@ public class SizeBlock extends AbstractBlock implements Serializable {
     parse(o);
   }
 
+  public SizeBlock(SizeType sizeType, int from, int to) throws IOException {
+    this.sizeType = sizeType;
+    this.from = from;
+    this.to = to;
+  }
+
   @Override
   protected final void parse(ASN1Encodable to) throws IOException {
     ASN1Sequence s1 = ASN1Sequence.getInstance(to);
     ASN1TaggedObject tag = ASN1TaggedObject.getInstance(s1.getObjectAt(0));
-    type = SizeType.getById(tag.getTagNo());
-    if (type == null) {
+    sizeType = SizeType.getById(tag.getTagNo());
+    if (sizeType == null) {
       throw new IOException("Unknown type in SizeType " + tag.getTagNo());
     }
 
@@ -93,10 +99,10 @@ public class SizeBlock extends AbstractBlock implements Serializable {
   @Override
   public String dumpValueNotation(String prefix, DumpType dumptype) {
     StringBuilder sb = new StringBuilder();
-    sb.append(type.name().toLowerCase()).append(" {").append(CRLF);
+    sb.append(sizeType.name().toLowerCase()).append(" {").append(CRLF);
     String s1 = "fromPercent";
     String s2 = "toPercent";
-    if (type == SizeType.ABSOLUTE) {
+    if (sizeType == SizeType.ABSOLUTE) {
       s1 = "fromAbsolute";
       s2 = "toAbsolute";
     }
@@ -114,7 +120,7 @@ public class SizeBlock extends AbstractBlock implements Serializable {
     ASN1EncodableVector v2 = new ASN1EncodableVector();
     v2.add(new ASN1Integer(from));
     v2.add(new ASN1Integer(to));
-    v.add(new DERTaggedObject(type.getId(), new DERSequence(v2)));
+    v.add(new DERTaggedObject(sizeType.getId(), new DERSequence(v2)));
 
     return new DERSequence(v);
   }

@@ -31,6 +31,7 @@ import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERSequence;
 
 import java.io.Serializable;
+import org.bouncycastle.asn1.DERTaggedObject;
 
 /**
  * Contains all classes extending assembly blocks (Payload operations).
@@ -38,6 +39,8 @@ import java.io.Serializable;
 public class MapBlockOperation extends Operation implements Serializable {
 
   public static final long serialVersionUID = 100000000002L;
+
+  public final static int tagNumber = 1001;
 
   int originalId = -1;
   int newId = -1;
@@ -51,11 +54,23 @@ public class MapBlockOperation extends Operation implements Serializable {
    * @param object the ASN.1 code
    */
   public MapBlockOperation(ASN1Encodable object) {
+    this();
     parse(object);
   }
 
+  /***
+   * <p>Create object from ASN.1 code.</p>
+   *
+   * @param object the ASN.1 code
+   */
+  public MapBlockOperation(int in, int out) {
+    this();
+    originalId=in;
+    newId=out;
+  }
+
   @Override
-  protected final void parse(ASN1Encodable to)  {
+  protected final void parse(ASN1Encodable to) {
     ASN1Sequence s1 = ASN1Sequence.getInstance(to);
     int i = 0;
     originalId = ASN1Integer.getInstance(s1.getObjectAt(i++)).getValue().intValue();
@@ -65,7 +80,7 @@ public class MapBlockOperation extends Operation implements Serializable {
   @Override
   public String dumpValueNotation(String prefix, DumpType dumptype) {
     StringBuilder sb = new StringBuilder();
-    sb.append('{').append(CRLF);
+    sb.append('[').append(tagNumber).append(']').append('{').append(CRLF);
     sb.append(prefix).append("  originalId ").append(originalId).append(',').append(CRLF);
     sb.append(prefix).append("  newId ").append(newId).append(CRLF);
     sb.append(prefix).append('}').append(CRLF);
@@ -77,11 +92,16 @@ public class MapBlockOperation extends Operation implements Serializable {
     ASN1EncodableVector v = new ASN1EncodableVector();
     v.add(new ASN1Integer(originalId));
     v.add(new ASN1Integer(newId));
-    return new DERSequence(v);
+    return new DERTaggedObject(true, tagNumber, new DERSequence(v));
   }
 
   @Override
-  public Operation getNewInstance(ASN1Encodable object)  {
+  public Operation getNewInstance(ASN1Encodable object) {
     return new MapBlockOperation(object);
+  }
+
+  @Override
+  public int getTagNumber() {
+    return tagNumber;
   }
 }

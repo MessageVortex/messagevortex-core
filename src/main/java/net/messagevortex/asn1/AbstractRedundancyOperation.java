@@ -164,7 +164,7 @@ public abstract class AbstractRedundancyOperation
   @Override
   public String dumpValueNotation(String prefix, DumpType dumpType) {
     StringBuilder sb = new StringBuilder();
-    sb.append("  {" + CRLF);
+    sb.append('[').append(getTagNumber()).append(']').append("{" + CRLF);
     sb.append(prefix).append("  inputId ").append(inputId).append(',').append(CRLF);
     sb.append(prefix).append("  dataStripes ").append(dataStripes).append(',').append(CRLF);
     sb.append(prefix).append("  redundancy ").append(redundancyStripes).append(',').append(CRLF);
@@ -172,7 +172,7 @@ public abstract class AbstractRedundancyOperation
     int i = stripeKeys.size();
     for (SymmetricKey sk : stripeKeys) {
       i--;
-      sb.append(sk.dumpValueNotation(prefix + "  ", dumpType));
+      sb.append(prefix+"    ").append(sk.dumpValueNotation(prefix + "    ", dumpType));
       if (i > 0) {
         sb.append(',');
       }

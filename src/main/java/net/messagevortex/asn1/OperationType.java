@@ -1,15 +1,15 @@
 package net.messagevortex.asn1;
 
 enum OperationType {
-  SPLIT_PAYLOAD(150, new SplitPayloadOperation()),
-  MERGE_PAYLOAD(160, new MergePayloadOperation()),
-  ENCRYPT_PAYLOAD(300, new EncryptPayloadOperation()),
-  DECRYPT_PAYLOAD(310, new DecryptPayloadOperation()),
-  ADD_REDUNDANCY(400, new AddRedundancyOperation()),
-  REMOVE_REDUNDANCY(410, new RemoveRedundancyOperation()),
-  MAP(1001, new MapBlockOperation());
+  SPLIT_PAYLOAD(SplitPayloadOperation.tagNumber, new SplitPayloadOperation()),
+  MERGE_PAYLOAD(MergePayloadOperation.tagNumber, new MergePayloadOperation()),
+  ENCRYPT_PAYLOAD(EncryptPayloadOperation.tagNumber, new EncryptPayloadOperation()),
+  DECRYPT_PAYLOAD(DecryptPayloadOperation.tagNumber, new DecryptPayloadOperation()),
+  ADD_REDUNDANCY(AddRedundancyOperation.tagNumber, new AddRedundancyOperation()),
+  REMOVE_REDUNDANCY(RemoveRedundancyOperation.tagNumber, new RemoveRedundancyOperation()),
+  MAP(MapBlockOperation.tagNumber, new MapBlockOperation());
 
-  int id;
+  public final int id;
   Operation operation;
 
   OperationType(int id, Operation operation) {

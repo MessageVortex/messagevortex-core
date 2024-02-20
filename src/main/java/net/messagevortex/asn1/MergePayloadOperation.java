@@ -31,6 +31,7 @@ import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.DERSequence;
 
 import java.io.Serializable;
+import org.bouncycastle.asn1.DERTaggedObject;
 
 /**
  * <p>Represents a merge payload operation.</p>
@@ -45,6 +46,8 @@ public class MergePayloadOperation extends Operation implements Serializable {
   int originalSecondId = -1;
   int newId = -1;
 
+  final static int tagNumber=160;
+
   MergePayloadOperation() {
   }
 
@@ -54,6 +57,7 @@ public class MergePayloadOperation extends Operation implements Serializable {
    * @param object the ASN.1 code
    */
   public MergePayloadOperation(ASN1Encodable object) {
+    this();
     parse(object);
   }
 
@@ -69,10 +73,10 @@ public class MergePayloadOperation extends Operation implements Serializable {
   @Override
   public String dumpValueNotation(String prefix, DumpType dumptype) {
     StringBuilder sb = new StringBuilder();
-    sb.append('{').append(CRLF);
+    sb.append('[').append(tagNumber).append(']').append('{').append(CRLF);
     sb.append(prefix).append("  originalFirstId ").append(originalFirstId).append(',').append(CRLF);
     sb.append(prefix).append("  originalSecondId ").append(originalSecondId).append(',')
-            .append(CRLF);
+        .append(CRLF);
     sb.append(prefix).append("  newId ").append(newId).append(CRLF);
     sb.append(prefix).append('}');
     return sb.toString();
@@ -84,11 +88,17 @@ public class MergePayloadOperation extends Operation implements Serializable {
     s1.add(new ASN1Integer(originalFirstId));
     s1.add(new ASN1Integer(originalSecondId));
     s1.add(new ASN1Integer(newId));
-    return new DERSequence(s1);
+    return new DERTaggedObject(true, tagNumber, new DERSequence(s1));
   }
 
   @Override
   public Operation getNewInstance(ASN1Encodable object) {
     return new MergePayloadOperation(object);
   }
+
+  @Override
+  public int getTagNumber() {
+    return tagNumber;
+  }
+
 }

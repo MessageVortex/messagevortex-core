@@ -4,6 +4,8 @@ import org.bouncycastle.asn1.ASN1Encodable;
 
 import java.io.IOException;
 import java.io.Serializable;
+import org.bouncycastle.asn1.ASN1TaggedObject;
+import org.bouncycastle.asn1.DERTaggedObject;
 
 /**
  * Represents a the Blending specification of the router block.
@@ -11,8 +13,6 @@ import java.io.Serializable;
 public abstract class Operation extends AbstractBlock implements Serializable {
 
   public static final long serialVersionUID = 100000000012L;
-
-  private int tagNumber = -1;
 
   /* constructor */
   Operation() {
@@ -28,17 +28,10 @@ public abstract class Operation extends AbstractBlock implements Serializable {
    */
   public abstract Operation getNewInstance(ASN1Encodable asn1Encodable) throws IOException;
 
-  /***
-   * <p>sets the ag number to be set when encoding the operation.</p>
-   *
-   * @param newTagNumber the new tag number to be set
-   */
-  protected void setTagNumber(int newTagNumber) {
-    tagNumber = newTagNumber;
+  public static Operation getInstance(ASN1Encodable obj) throws IOException {
+    ASN1TaggedObject to = DERTaggedObject.getInstance(obj);
+    return OperationType.getById(to.getTagNo()).getFactory().getNewInstance(to.getBaseObject());
   }
 
-  protected int getTagNumber() {
-    return tagNumber;
-  }
-
+  public abstract int getTagNumber();
 }

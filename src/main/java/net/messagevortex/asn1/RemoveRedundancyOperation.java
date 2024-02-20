@@ -22,11 +22,14 @@ package net.messagevortex.asn1;
 // * SOFTWARE.
 // ************************************************************************************
 
+import net.messagevortex.asn1.encryption.DumpType;
 import org.bouncycastle.asn1.ASN1Encodable;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
+import org.bouncycastle.asn1.ASN1Object;
+import org.bouncycastle.asn1.DERTaggedObject;
 
 /**
  * Represents a remove redundancy operation.
@@ -35,12 +38,10 @@ public class RemoveRedundancyOperation extends AbstractRedundancyOperation imple
 
   public static final long serialVersionUID = 100000000023L;
 
-  RemoveRedundancyOperation() {
-  }
+  public final static int tagNumber = 410;
 
-  @Override
-  public Operation getNewInstance(ASN1Encodable object) throws IOException {
-    return new RemoveRedundancyOperation(object);
+
+  RemoveRedundancyOperation() {
   }
 
   public RemoveRedundancyOperation(int inputId, int dataStripes, int redundancy,
@@ -50,6 +51,22 @@ public class RemoveRedundancyOperation extends AbstractRedundancyOperation imple
 
   public RemoveRedundancyOperation(ASN1Encodable to) throws IOException {
     super(to);
+  }
+
+  @Override
+  public ASN1Object toAsn1Object(DumpType dumpType) throws IOException {
+    return new DERTaggedObject(true, tagNumber, super.toAsn1Object(dumpType));
+  }
+
+
+  @Override
+  public Operation getNewInstance(ASN1Encodable object) throws IOException {
+    return new RemoveRedundancyOperation(object);
+  }
+
+  @Override
+  public int getTagNumber() {
+    return tagNumber;
   }
 
 }

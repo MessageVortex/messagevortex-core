@@ -9,11 +9,13 @@ public class EncryptPayloadOperation extends AbstractCryptPayloadOperation imple
 
   public static final long serialVersionUID = 100000000029L;
 
+
+  final static int tagNumber=300;
+
   /***
    * <p>This is an empty constructor for template instanciation.</p>
    */
   EncryptPayloadOperation() {
-    // empty constructor for template instanciation
   }
 
   /***
@@ -27,10 +29,10 @@ public class EncryptPayloadOperation extends AbstractCryptPayloadOperation imple
    */
   public EncryptPayloadOperation(int sourceBlock,int targetBlock, SymmetricKey key)
           throws IOException {
+    this();
     if (key == null) {
       key = new SymmetricKey();
     }
-    setTagNumber(OperationType.ENCRYPT_PAYLOAD.getId());
     this.originalId = sourceBlock;
     this.newId = targetBlock;
     this.key = key;
@@ -50,4 +52,10 @@ public class EncryptPayloadOperation extends AbstractCryptPayloadOperation imple
   public Operation getNewInstance(ASN1Encodable object) throws IOException {
     return new EncryptPayloadOperation(object);
   }
+
+  @Override
+  public int getTagNumber() {
+    return tagNumber;
+  }
+
 }

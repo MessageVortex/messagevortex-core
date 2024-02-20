@@ -3,6 +3,7 @@ package net.messagevortex.router.operation;
 import java.io.IOException;
 import java.io.Serializable;
 import net.messagevortex.MessageVortexLogger;
+import org.bouncycastle.asn1.ASN1Encodable;
 
 public class MergeOperation extends AbstractOperation implements Serializable {
 
@@ -70,4 +71,5 @@ public class MergeOperation extends AbstractOperation implements Serializable {
     }
     return sizeOfInputBlocks[0]+sizeOfInputBlocks[1];
   }
+
 }

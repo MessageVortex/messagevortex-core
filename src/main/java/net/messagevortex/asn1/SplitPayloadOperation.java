@@ -32,6 +32,7 @@ import org.bouncycastle.asn1.DERSequence;
 
 import java.io.IOException;
 import java.io.Serializable;
+import org.bouncycastle.asn1.DERTaggedObject;
 
 /**
  * Splits a payload block in two blocks.
@@ -40,38 +41,48 @@ public class SplitPayloadOperation extends Operation implements Serializable {
 
   public static final long serialVersionUID = 100000000023L;
 
-  int originalFirstId = -1;
-  int originalSecondId = -1;
-  SizeBlock originalSize = null;
-  int newId = -1;
+  int originalId = -1;
+  SizeBlock firstSize = null;
+  int newFirstId = -1;
+  int newSecondId = -1;
+
+  final static int tagNumber=150;
 
   SplitPayloadOperation() {
   }
 
   public SplitPayloadOperation(ASN1Encodable object) throws IOException {
+    this();
     parse(object);
+  }
+
+  public SplitPayloadOperation(int originalId, SizeBlock firstSize, int newFirstId, int newSecondId) throws IOException {
+    this();
+    this.originalId=originalId;
+    this.firstSize=firstSize;
+    this.newFirstId=newFirstId;
+    this.newSecondId=newSecondId;
   }
 
   @Override
   protected final void parse(ASN1Encodable to) throws IOException {
     ASN1Sequence s1 = ASN1Sequence.getInstance(to);
     int i = 0;
-    originalFirstId = ASN1Integer.getInstance(s1.getObjectAt(i++)).getValue().intValue();
-    originalSecondId = ASN1Integer.getInstance(s1.getObjectAt(i++)).getValue().intValue();
-    originalSize = new SizeBlock(s1.getObjectAt(i++));
-    newId = ASN1Integer.getInstance(s1.getObjectAt(i++)).getValue().intValue();
+    originalId = ASN1Integer.getInstance(s1.getObjectAt(i++)).getValue().intValue();
+    firstSize = new SizeBlock(s1.getObjectAt(i++));
+    newFirstId = ASN1Integer.getInstance(s1.getObjectAt(i++)).getValue().intValue();
+    newSecondId = ASN1Integer.getInstance(s1.getObjectAt(i++)).getValue().intValue();
   }
 
   @Override
   public String dumpValueNotation(String prefix, DumpType dumptype) throws IOException {
     StringBuilder sb = new StringBuilder();
-    sb.append('{').append(CRLF);
-    sb.append(prefix).append("  originalFirstId ").append(originalFirstId).append(',').append(CRLF);
-    sb.append(prefix).append("  originalSecondId ").append(originalSecondId).append(',')
-                     .append(CRLF);
-    sb.append(prefix).append("  originalSize ").append(originalSize
-            .dumpValueNotation(prefix + "  ", dumptype)).append(',').append(CRLF);
-    sb.append(prefix).append("  newId ").append(newId).append(CRLF);
+    sb.append('[').append(tagNumber).append(']').append('{').append(CRLF);
+    sb.append(prefix).append("  originalId ").append(originalId).append(',').append(CRLF);
+    sb.append(prefix).append("  firstSize ").append(firstSize
+        .dumpValueNotation(prefix + "  ", dumptype)).append(',').append(CRLF);
+    sb.append(prefix).append("  newFirstId ").append(newFirstId).append(CRLF);
+    sb.append(prefix).append("  newSecondId ").append(newSecondId).append(CRLF);
     sb.append(prefix).append('}');
     return sb.toString();
   }
@@ -79,15 +90,21 @@ public class SplitPayloadOperation extends Operation implements Serializable {
   @Override
   public ASN1Object toAsn1Object(DumpType dumpType) throws IOException {
     ASN1EncodableVector s1 = new ASN1EncodableVector();
-    s1.add(new ASN1Integer(originalFirstId));
-    s1.add(new ASN1Integer(originalSecondId));
-    s1.add(originalSize.toAsn1Object(dumpType));
-    s1.add(new ASN1Integer(newId));
-    return new DERSequence(s1);
+    s1.add(new ASN1Integer(originalId));
+    s1.add(firstSize.toAsn1Object(dumpType));
+    s1.add(new ASN1Integer(newFirstId));
+    s1.add(new ASN1Integer(newSecondId));
+    return new DERTaggedObject(true, tagNumber, new DERSequence(s1));
   }
 
   @Override
   public Operation getNewInstance(ASN1Encodable object) throws IOException {
     return new SplitPayloadOperation(object);
   }
+
+  @Override
+  public int getTagNumber() {
+    return tagNumber;
+  }
+
 }

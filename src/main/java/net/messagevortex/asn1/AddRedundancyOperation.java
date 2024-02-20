@@ -19,6 +19,8 @@ public class AddRedundancyOperation extends AbstractRedundancyOperation
 
   public static final long serialVersionUID = 100000000032L;
 
+  final static int tagNumber=400;
+
   AddRedundancyOperation() {
   }
 
@@ -57,8 +59,7 @@ public class AddRedundancyOperation extends AbstractRedundancyOperation
 
   @Override
   public ASN1Object toAsn1Object(DumpType dumpType) throws IOException {
-    return new DERTaggedObject(true, OperationType.ADD_REDUNDANCY.getId(),
-        super.toAsn1Object(dumpType));
+    return new DERTaggedObject(true, tagNumber, super.toAsn1Object(dumpType));
   }
 
   public ASN1Primitive toAsn1Primitive() throws IOException {
@@ -68,4 +69,10 @@ public class AddRedundancyOperation extends AbstractRedundancyOperation
   public Operation getNewInstance(ASN1Encodable object) throws IOException {
     return new AddRedundancyOperation(object);
   }
+
+  @Override
+  public int getTagNumber() {
+    return tagNumber;
+  }
+
 }

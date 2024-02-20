@@ -13,15 +13,17 @@ import java.io.IOException;
 import java.io.Serializable;
 
 public abstract class AbstractCryptPayloadOperation extends Operation
-                implements Serializable, Dumpable {
+    implements Serializable, Dumpable {
 
   public static final long serialVersionUID = 100000000033L;
+
 
   int originalId = -1;
   SymmetricKey key = null;
   int newId = -1;
 
-  AbstractCryptPayloadOperation() {}
+  AbstractCryptPayloadOperation() {
+  }
 
   /***
    * <p>Create object from ASN.1 code.</p>
@@ -48,7 +50,7 @@ public abstract class AbstractCryptPayloadOperation extends Operation
     sb.append('[').append(getTagNumber()).append("] {").append(CRLF);
     sb.append(prefix).append("  originalId ").append(originalId).append(',').append(CRLF);
     sb.append(prefix).append("  key ").append(key.dumpValueNotation(prefix + "  ", dumptype))
-                     .append(',').append(CRLF);
+        .append(',').append(CRLF);
     sb.append(prefix).append("  newId ").append(newId).append(CRLF);
     sb.append(prefix).append('}');
     return sb.toString();
@@ -60,7 +62,7 @@ public abstract class AbstractCryptPayloadOperation extends Operation
     v.add(new ASN1Integer(originalId));
     v.add(key.toAsn1Object(dumpType));
     v.add(new ASN1Integer(newId));
-    return new DERTaggedObject(getTagNumber(), new DERSequence(v));
+    return new DERTaggedObject(true, getTagNumber(), new DERSequence(v));
   }
 
   public abstract Operation getNewInstance(ASN1Encodable object) throws IOException;

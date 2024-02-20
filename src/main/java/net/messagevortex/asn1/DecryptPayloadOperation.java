@@ -9,6 +9,8 @@ public class DecryptPayloadOperation extends AbstractCryptPayloadOperation imple
 
   public static final long serialVersionUID = 100000000030L;
 
+  final static int tagNumber=310;
+
   DecryptPayloadOperation() {
   }
 
@@ -23,10 +25,10 @@ public class DecryptPayloadOperation extends AbstractCryptPayloadOperation imple
    */
   public DecryptPayloadOperation(int sourceBlock,int targetBlock, SymmetricKey key)
           throws IOException {
+    this();
     if (key == null) {
       key = new SymmetricKey();
     }
-    setTagNumber(OperationType.DECRYPT_PAYLOAD.getId());
     this.originalId = sourceBlock;
     this.newId = targetBlock;
     this.key = key;
@@ -45,6 +47,11 @@ public class DecryptPayloadOperation extends AbstractCryptPayloadOperation imple
   @Override
   public Operation getNewInstance(ASN1Encodable object) throws IOException {
     return new DecryptPayloadOperation(object);
+  }
+
+  @Override
+  public int getTagNumber() {
+    return tagNumber;
   }
 
 }
