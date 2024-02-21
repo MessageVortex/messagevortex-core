@@ -145,14 +145,13 @@ public class AsymmetricKeyPreCalculator implements Serializable, Callable<Intege
          * <p>Runner for the key calculation.</p>
          */
         public void run() {
-            LOGGER.log(Level.FINE, "precalculating key " + param + "");
             try {
                 long start = System.currentTimeMillis();
-                LOGGER.log(Level.INFO, "Precalculating "+param.toString()+" for cache");
+                LOGGER.log(Level.FINE, "Precalculating "+param.toString()+" for cache");
                 AsymmetricKey ak = new AsymmetricKey(new AlgorithmParameter(param), false);
                 cache.setCalcTime(new AlgorithmParameter(param), System.currentTimeMillis() - start);
                 cache.push(ak);
-                LOGGER.log(Level.INFO, "Precalculation of "+param.toString()+" done and moved to cache");
+                LOGGER.log(Level.FINE, "Precalculation of "+param.toString()+" done and moved to cache");
             } catch (IOException ioe) {
                 LOGGER.log(Level.SEVERE, "got unexpected exception", ioe);
             }

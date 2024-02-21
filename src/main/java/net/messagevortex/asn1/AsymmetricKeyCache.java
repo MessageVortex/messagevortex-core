@@ -134,7 +134,7 @@ public class AsymmetricKeyCache implements Serializable {
     public void setCalcTime(long millis) {
       synchronized (elementCache) {
         averageCalcTime = (averageCalcTime * numberOfCalcTimes + millis) / (numberOfCalcTimes + 1);
-        numberOfCalcTimes = Math.min(numberOfCalcTimes, MAX_NUMBER_OF_CALC_TIMES);
+        numberOfCalcTimes = Math.min(numberOfCalcTimes + 1, MAX_NUMBER_OF_CALC_TIMES);
       }
     }
 
@@ -231,13 +231,13 @@ public class AsymmetricKeyCache implements Serializable {
       averageCalcTime = (long) (in.readObject());
       numberOfCalcTimes = (Integer) in.readObject();
       int i = (Integer) in.readObject();
-      LOGGER.log(Level.INFO, "Reading "+i+" cache elements");
+      LOGGER.log(Level.INFO, "Reading " + i + " cache elements");
       if (elementCache == null) {
         elementCache = new ArrayDeque<>();
       }
       elementCache.clear();
       for (int j = 0; j < i; j++) {
-        LOGGER.log(Level.FINEST, "  Reading cache element "+j+" into cache");
+        LOGGER.log(Level.FINEST, "  Reading cache element " + j + " into cache");
         push((AsymmetricKey) in.readObject());
       }
     }
@@ -268,7 +268,9 @@ public class AsymmetricKeyCache implements Serializable {
     }
 
     // refuse to write an empty cache
-    if(cache.isEmpty()) return;
+    if (cache.isEmpty()) {
+      return;
+    }
 
     // write file
     Path p = Paths.get(filename);
@@ -481,18 +483,13 @@ public class AsymmetricKeyCache implements Serializable {
 
 
     // get element and return
-    AlgorithmParameter ap=null;
     for (Map.Entry<Long, AlgorithmParameter> me : hm.entrySet()) {
-      if(me==null) {
-        ap=me.getValue();
-      }
       if (me.getKey() >= e) {
-        return ap;
+        return me.getValue();
       }
-      ap=me.getValue();
     }
 
-    return ap;
+    return null;
   }
 
 
@@ -558,7 +555,7 @@ public class AsymmetricKeyCache implements Serializable {
     synchronized (cache) {
       out.writeInt(cache.size());
       for (Map.Entry<AlgorithmParameter, CacheElement> me : cache.entrySet()) {
-        LOGGER.log(Level.INFO, "Writing "+me.getKey().toString()+" ("+me.getValue().size()+")");
+        LOGGER.log(Level.INFO, "Writing " + me.getKey().toString() + " (" + me.getValue().size() + ")");
         out.writeObject(me.getKey());
         out.writeObject(me.getValue());
       }
@@ -574,9 +571,9 @@ public class AsymmetricKeyCache implements Serializable {
       this.cache.clear();
       for (int j = 0; j < i; j++) {
         AlgorithmParameter key = (AlgorithmParameter) in.readObject();
-        LOGGER.log(Level.INFO, "Reading "+key.toString()+"");
+        LOGGER.log(Level.INFO, "Reading " + key.toString() + "");
         CacheElement value = (CacheElement) in.readObject();
-        LOGGER.log(Level.INFO, value.size()+" elements of "+key.toString()+" has been read");
+        LOGGER.log(Level.INFO, value.size() + " elements of " + key.toString() + " has been read");
         this.cache.put(key, value);
       }
     } catch (ClassNotFoundException cnfe) {
@@ -652,7 +649,7 @@ public class AsymmetricKeyCache implements Serializable {
         long ms = ce.getMaxSize();
         LOGGER.log(Level.INFO, "|" + String.format("%2s", i) + ") " + String.format("%5s", s)
             + "/" + String.format("%5s", ms) + " "
-            + percentBar((double) (s) / ms, 20) + " " + e.getKey());
+            + percentBar((double) (s) / ms, 20) + " (" + e.getValue().getCacheFillTime() / 1000 + "s) " + e.getKey());
         sum += s;
         tot += ms;
 
